@@ -5,11 +5,11 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// PostgreSQL-Datenbank-Verbindung (Connection String)
+// PostgreSQL-Datenbank-Verbindung (ersetze 'dein_connection_string' durch deinen tatsächlichen Connection-String)
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Stelle sicher, dass DATABASE_URL in den Render-Umgebungsvariablen konfiguriert ist
+  connectionString: 'postgresql://gaestelistedb_o0ev_user:SsPaukVReZVdYnkCc7Ih1VQ2LtyUFHJb@dpg-crn9tft6l47c73ac0tvg-a/gaestelistedb_o0ev',  // Deinen Connection-String hier einfügen
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false  // Falls du SSL verwenden musst (z. B. bei Render), ansonsten auf true setzen.
   }
 });
 
