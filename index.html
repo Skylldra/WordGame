@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wortvergleich-Spiel</title>
+    <script defer src="spiel.js"></script>
+</head>
+<body>
+    <h1>Wortvergleich-Spiel</h1>
+    
+    <div id="spielbereich">
+        <h2>Spieler hinzufügen</h2>
+        <input type="text" id="spielerName" placeholder="Spielername eingeben">
+        <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
+        
+        <h2>Spieler:</h2>
+        <ul id="spielerListe"></ul>
+
+        <h2>Worteingabe</h2>
+        <div id="wortEingabeBereich"></div>
+        <button id="wortEinloggenBtn" onclick="worteEinloggen()">Worte einloggen</button>
+
+        <h2>Ergebnis</h2>
+        <p id="ergebnis"></p>
+
+        <button onclick="zurücksetzen()">Zurücksetzen</button>
+    </div>
+
+    <h2>Verlauf:</h2>
+    <ul id="verlaufListe"></ul>
+
+</body>
+</html>

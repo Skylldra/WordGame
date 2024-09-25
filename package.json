@@ -1,0 +1,16 @@
+{
+  "name": "wortspiel",
+  "version": "1.0.0",
+  "description": "Wortvergleich-Spiel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "pg": "^8.7.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
