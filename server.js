@@ -64,6 +64,7 @@ app.post('/zuruecksetzen', async (req, res) => {
     await pool.query('DELETE FROM worte');
     spieler = [];
     verlauf = [];
+    wortEingaben = {};
     io.emit('reset');
     res.json({ status: 'reset' });
   } catch (err) {
@@ -95,15 +96,19 @@ io.on('connection', (socket) => {
 
     // Wenn alle Spieler ihre Wörter eingeloggt haben
     if (Object.keys(wortEingaben).length === spieler.length) {
-      verlauf.push(wortEingaben); // Wörter zum Verlauf hinzufügen
+      verlauf.push({ ...wortEingaben }); // Wörter zum Verlauf hinzufügen
       const wörter = Object.values(wortEingaben);
       
       // Wörter vergleichen
       const ergebnis = new Set(wörter).size === 1 
         ? "Gewonnen! Alle haben dasselbe Wort: " + wörter[0]
-        : "Weiter! Wörter stimmen nicht überein.";
+        : `Weiter! Runde ${verlauf.length}: Wörter stimmen nicht überein.`;
 
-      io.emit('vergleichErgebnis', ergebnis); // Ergebnis an alle senden
+      if (new Set(wörter).size === 1) {
+        io.emit('gewonnen');
+      }
+
+      io.emit('vergleichErgebnis', { ergebnis, verlauf }); // Ergebnis an alle senden
       wortEingaben = {}; // Zurücksetzen für die nächste Runde
     }
   });
