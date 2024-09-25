@@ -69,12 +69,20 @@
         <input type="text" id="spielerName" placeholder="Spielername eingeben">
         <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
 
+        <h2>Aktive Spieler</h2>
+        <ul id="spielerListe"></ul>
+
         <h2>Worteingabe</h2>
         <div id="wortEingabeBereich"></div>
         <button id="wortEinloggenBtn" onclick="worteEinloggen()">Worte einloggen</button>
 
         <h2>Ergebnis</h2>
         <p id="ergebnis"></p>
+
+        <button onclick="spielZuruecksetzen()">Spiel zurücksetzen</button>
+
+        <h2>Verlauf</h2>
+        <ul id="verlaufListe"></ul>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -82,6 +90,7 @@
         const socket = io();
         let meinName = null;
 
+        // Spieler hinzufügen
         function spielerHinzufügen() {
             const name = document.getElementById("spielerName").value;
             if (name) {
@@ -91,6 +100,7 @@
             }
         }
 
+        // Eingabefeld für Wort anzeigen
         function updateWortEingabeBereich(name) {
             const wortEingabeBereich = document.getElementById("wortEingabeBereich");
             wortEingabeBereich.innerHTML = `
@@ -98,6 +108,7 @@
             `;
         }
 
+        // Wort einloggen
         function worteEinloggen() {
             const wort = document.getElementById("wortEingabe").value;
             if (wort && meinName) {
@@ -105,14 +116,58 @@
             }
         }
 
+        // Spiel zurücksetzen
+        function spielZuruecksetzen() {
+            fetch('/zuruecksetzen', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'reset') {
+                        document.getElementById("ergebnis").textContent = '';
+                        updateSpielerListe([]);
+                        updateVerlaufListe([]);
+                    }
+                });
+        }
+
+        // Ergebnis des Wortvergleichs anzeigen
         socket.on('vergleichErgebnis', (ergebnis) => {
             document.getElementById("ergebnis").textContent = ergebnis;
         });
 
+        // Spielerliste und Verlauf aktualisieren
         socket.on('update', (data) => {
             const { spieler, verlauf } = data;
-            console.log("Spieler: ", spieler);
-            console.log("Verlauf: ", verlauf);
+            updateSpielerListe(spieler);
+            updateVerlaufListe(verlauf);
+        });
+
+        // Spielerliste aktualisieren
+        function updateSpielerListe(spieler) {
+            const spielerListe = document.getElementById("spielerListe");
+            spielerListe.innerHTML = '';
+            spieler.forEach(s => {
+                const li = document.createElement("li");
+                li.textContent = s;
+                spielerListe.appendChild(li);
+            });
+        }
+
+        // Verlauf aktualisieren
+        function updateVerlaufListe(verlauf) {
+            const verlaufListe = document.getElementById("verlaufListe");
+            verlaufListe.innerHTML = '';
+            verlauf.forEach((runde, index) => {
+                const li = document.createElement("li");
+                li.textContent = `Runde ${index + 1}: ${Object.values(runde).join(', ')}`;
+                verlaufListe.appendChild(li);
+            });
+        }
+
+        // Reset-Event von Server empfangen
+        socket.on('reset', () => {
+            document.getElementById("ergebnis").textContent = '';
+            updateSpielerListe([]);
+            updateVerlaufListe([]);
         });
     </script>
 </body>
