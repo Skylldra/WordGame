@@ -1,87 +1,133 @@
-const express = require('express');
-const { Pool } = require('pg');
-const path = require('path');
-const http = require('http');
-const socketIo = require('socket.io');
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wortvergleich-Spiel</title>
+    <style>
+        body {
+            background-color: #4A90E2;
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1, h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #spielbereich {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            color: #333;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4A90E2;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357ABD;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="spielbereich">
+        <h1>Wortvergleich-Spiel</h1>
+        
+        <h2>Spieler hinzufügen</h2>
+        <input type="text" id="spielerName" placeholder="Spielername eingeben">
+        <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
 
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
+        <h2>Aktive Spieler</h2>
+        <ul id="spielerListe"></ul>
 
-const port = process.env.PORT || 3000;
+        <h2>Worteingabe</h2>
+        <div id="wortEingabeBereich"></div>
+        <button id="wortEinloggenBtn" onclick="worteEinloggen()">Worte einloggen</button>
 
-let spieler = []; // Liste der Spieler
-let verlauf = [];  // Verlaufsdaten
-let wortEingaben = {}; // Wörter der Spieler
+        <h2>Ergebnis</h2>
+        <p id="ergebnis"></p>
 
-// PostgreSQL-Datenbank-Verbindung
-const pool = new Pool({
-  connectionString: 'postgresql://gaestelistedb_o0ev_user:SsPaukVReZVdYnkCc7Ih1VQ2LtyUFHJb@dpg-crn9tft6l47c73ac0tvg-a/gaestelistedb_o0ev',
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+        <button onclick="spielZuruecksetzen()">Spiel zurücksetzen</button>
 
-app.use(express.json());
+        <h2>Verlauf</h2>
+        <ul id="verlaufListe"></ul>
+    </div>
 
-const createTableIfNotExists = async () => {
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS worte (
-      id SERIAL PRIMARY KEY,
-      spielername VARCHAR(80),
-      wort VARCHAR(80)
-    );
-  `;
-  try {
-    await pool.query(createTableQuery);
-    console.log("Tabelle 'worte' wurde überprüft und ggf. erstellt.");
-  } catch (err) {
-    console.error("Fehler beim Erstellen der Tabelle:", err);
-  }
-};
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let meinName = null;
 
-// Tabelle beim Start des Servers erstellen
-createTableIfNotExists();
+        function spielerHinzufügen() {
+            const name = document.getElementById("spielerName").value;
+            if (name) {
+                meinName = name;
+                socket.emit('spielerHinzufügen', name);
+                updateWortEingabeBereich(name);
+            }
+        }
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+        function updateWortEingabeBereich(name) {
+            const wortEingabeBereich = document.getElementById("wortEingabeBereich");
+            wortEingabeBereich.innerHTML = `
+                <input type="text" id="wortEingabe" placeholder="Wort eingeben">
+            `;
+        }
 
-io.on('connection', (socket) => {
-  console.log('Ein Spieler ist verbunden');
+        function worteEinloggen() {
+            const wort = document.getElementById("wortEingabe").value;
+            if (wort && meinName) {
+                socket.emit('wortEinloggen', { name: meinName, wort });
+            }
+        }
 
-  // Spieler hinzufügen
-  socket.on('spielerHinzufügen', (name) => {
-    if (!spieler.includes(name)) {
-      spieler.push(name);
-      io.emit('update', { spieler, verlauf });
-    }
-  });
+        function spielZuruecksetzen() {
+            fetch('/zuruecksetzen', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'reset') {
+                        document.getElementById("ergebnis").textContent = '';
+                        updateSpielerListe([]);
+                        updateVerlaufListe([]);
+                    }
+                });
+        }
 
-  // Wort einloggen
-  socket.on('wortEinloggen', ({ name, wort }) => {
-    wortEingaben[name] = wort; // Das Wort des Spielers speichern
+        socket.on('vergleichErgebnis', (ergebnis) => {
+            document.getElementById("ergebnis").textContent = ergebnis;
+        });
 
-    // Wenn alle Spieler ihre Wörter eingeloggt haben
-    if (Object.keys(wortEingaben).length === spieler.length) {
-      verlauf.push(wortEingaben); // Wörter zum Verlauf hinzufügen
-      const wörter = Object.values(wortEingaben);
-      
-      // Wörter vergleichen
-      const ergebnis = new Set(wörter).size === 1 
-        ? "Gewonnen! Alle haben dasselbe Wort: " + wörter[0]
-        : "Weiter! Wörter stimmen nicht überein.";
-
-      io.emit('vergleichErgebnis', ergebnis); // Ergebnis an alle senden
-      wortEingaben = {}; // Zurücksetzen für die nächste Runde
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Ein Spieler hat die Verbindung getrennt');
-  });
-});
-
-server.listen(port, () => {
-  console.log(`Server läuft auf Port ${port}`);
-});
+        socket.on('update', (data) => {
+            const { spieler } =
