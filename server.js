@@ -10,11 +10,13 @@ const io = socketIo(server);
 
 const port = process.env.PORT || 3000;
 
-// PostgreSQL-Datenbank-Verbindung (ersetze 'dein_connection_string' durch deinen tatsächlichen Connection-String)
+let verlauf = [];  // Definiere die verlauf-Variable hier oben
+
+// PostgreSQL-Datenbank-Verbindung
 const pool = new Pool({
   connectionString: 'postgresql://gaestelistedb_o0ev_user:SsPaukVReZVdYnkCc7Ih1VQ2LtyUFHJb@dpg-crn9tft6l47c73ac0tvg-a/gaestelistedb_o0ev',
   ssl: {
-    rejectUnauthorized: false  // Falls du SSL verwenden musst (z. B. bei Render), ansonsten auf true setzen.
+    rejectUnauthorized: false
   }
 });
 
@@ -38,7 +40,7 @@ const createTableIfNotExists = async () => {
   }
 };
 
-// Tabelle beim Start des Servers erstellen, falls sie nicht existiert
+// Tabelle beim Start des Servers erstellen
 createTableIfNotExists();
 
 // Route für das Servieren von index.html
@@ -255,7 +257,8 @@ app.post('/wort_einloggen', async (req, res) => {
     for (const entry of spieler) {
       await pool.query('INSERT INTO worte (spielername, wort) VALUES ($1, $2)', [entry.name, entry.wort]);
     }
-    io.emit('update', { spieler, verlauf: spieler });
+    verlauf = spieler.map(s => s.wort);  // aktualisiere verlauf
+    io.emit('update', { spieler, verlauf });
     res.json({ status: 'success' });
   } catch (err) {
     console.error(err);
@@ -267,7 +270,9 @@ app.post('/wort_einloggen', async (req, res) => {
 app.post('/zuruecksetzen', async (req, res) => {
   try {
     await pool.query('DELETE FROM worte');
-    io.emit('update', { spieler: [], verlauf: [] });
+    spieler = [];
+    verlauf = [];
+    io.emit('update', { spieler, verlauf });
     res.json({ status: 'reset' });
   } catch (err) {
     console.error(err);
@@ -280,6 +285,7 @@ io.on('connection', (socket) => {
   console.log('Ein Spieler ist verbunden');
   
   socket.on('spielerUpdate', (spieler) => {
+    verlauf = spieler.map(s => s.wort);
     io.emit('update', { spieler, verlauf });
   });
 
