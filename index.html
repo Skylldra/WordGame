@@ -59,6 +59,22 @@
             font-size: 1.2rem;
             margin-bottom: 5px;
         }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 1000;
+        }
+        .crown-icon {
+            font-size: 2rem;
+            color: gold;
+        }
     </style>
 </head>
 <body>
@@ -83,6 +99,11 @@
 
         <h2>Verlauf</h2>
         <ul id="verlaufListe"></ul>
+    </div>
+
+    <div id="gewonnenPopup" class="popup" style="display:none;">
+        <span class="crown-icon">👑</span>
+        <h2>Gewonnen!</h2>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -125,13 +146,15 @@
                         document.getElementById("ergebnis").textContent = '';
                         updateSpielerListe([]);
                         updateVerlaufListe([]);
+                        document.getElementById("wortEingabeBereich").innerHTML = '';
                     }
                 });
         }
 
         // Ergebnis des Wortvergleichs anzeigen
-        socket.on('vergleichErgebnis', (ergebnis) => {
-            document.getElementById("ergebnis").textContent = ergebnis;
+        socket.on('vergleichErgebnis', (data) => {
+            document.getElementById("ergebnis").textContent = data.ergebnis;
+            updateVerlaufListe(data.verlauf);
         });
 
         // Spielerliste und Verlauf aktualisieren
@@ -168,6 +191,12 @@
             document.getElementById("ergebnis").textContent = '';
             updateSpielerListe([]);
             updateVerlaufListe([]);
+            document.getElementById("wortEingabeBereich").innerHTML = '';
+        });
+
+        // Popup für "Gewonnen"
+        socket.on('gewonnen', () => {
+            document.getElementById("gewonnenPopup").style.display = 'block';
         });
     </script>
 </body>
