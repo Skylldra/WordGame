@@ -45,11 +45,66 @@ app.get('/', (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Wortvergleich-Spiel</title>
+        <style>
+            body {
+                background-color: #4A90E2;
+                font-family: Arial, sans-serif;
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            h1, h2 {
+                text-align: center;
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+            #spielbereich {
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+                color: #333;
+                width: 300px;
+                text-align: center;
+            }
+            input[type="text"] {
+                width: 100%;
+                padding: 10px;
+                margin: 10px 0;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                font-size: 1rem;
+            }
+            button {
+                width: 100%;
+                padding: 10px;
+                background-color: #4A90E2;
+                border: none;
+                border-radius: 5px;
+                color: white;
+                font-size: 1rem;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #357ABD;
+            }
+            ul {
+                list-style-type: none;
+                padding: 0;
+            }
+            li {
+                font-size: 1.2rem;
+                margin-bottom: 5px;
+            }
+        </style>
     </head>
     <body>
-        <h1>Wortvergleich-Spiel</h1>
-        
         <div id="spielbereich">
+            <h1>Wortvergleich-Spiel</h1>
+            
             <h2>Spieler hinzufügen</h2>
             <input type="text" id="spielerName" placeholder="Spielername eingeben">
             <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
@@ -65,10 +120,10 @@ app.get('/', (req, res) => {
             <p id="ergebnis"></p>
 
             <button onclick="zurücksetzen()">Zurücksetzen</button>
-        </div>
 
-        <h2>Verlauf:</h2>
-        <ul id="verlaufListe"></ul>
+            <h2>Verlauf:</h2>
+            <ul id="verlaufListe"></ul>
+        </div>
 
         <script>
             let spieler = [];
@@ -166,6 +221,14 @@ app.get('/', (req, res) => {
                     updateVerlaufListe();
                 }
             }
+
+            // Automatisches Aktualisieren alle 5 Sekunden
+            setInterval(async () => {
+                const response = await fetch('/verlauf');
+                const data = await response.json();
+                verlauf = data;
+                updateVerlaufListe();
+            }, 5000);
         </script>
     </body>
     </html>
