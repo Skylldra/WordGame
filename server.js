@@ -1,8 +1,13 @@
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
 const port = process.env.PORT || 3000;
 
 // PostgreSQL-Datenbank-Verbindung (ersetze 'dein_connection_string' durch deinen tatsächlichen Connection-String)
@@ -67,11 +72,12 @@ app.get('/', (req, res) => {
                 border-radius: 10px;
                 box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
                 color: #333;
-                width: 300px;
+                width: 100%;
+                max-width: 400px;
                 text-align: center;
             }
             input[type="text"] {
-                width: 100%;
+                width: calc(100% - 20px);
                 padding: 10px;
                 margin: 10px 0;
                 border-radius: 5px;
@@ -125,9 +131,20 @@ app.get('/', (req, res) => {
             <ul id="verlaufListe"></ul>
         </div>
 
+        <script src="/socket.io/socket.io.js"></script>
         <script>
             let spieler = [];
             let verlauf = [];
+
+            const socket = io();
+
+            socket.on('update', (data) => {
+                spieler = data.spieler;
+                verlauf = data.verlauf;
+                updateSpielerListe();
+                updateVerlaufListe();
+                vergleichWorte();
+            });
 
             function spielerHinzufügen() {
                 const name = document.getElementById("spielerName").value;
@@ -136,6 +153,7 @@ app.get('/', (req, res) => {
                     updateSpielerListe();
                     updateWortEingabeBereich();
                     document.getElementById("spielerName").value = '';
+                    socket.emit('spielerUpdate', spieler);
                 }
             }
 
@@ -181,6 +199,7 @@ app.get('/', (req, res) => {
                         verlauf.push([...spieler.map(s => s.wort)]);
                         updateVerlaufListe();
                         vergleichWorte();
+                        socket.emit('spielerUpdate', spieler);
                     }
                 }
             }
@@ -219,16 +238,9 @@ app.get('/', (req, res) => {
                     updateSpielerListe();
                     updateWortEingabeBereich();
                     updateVerlaufListe();
+                    socket.emit('spielerUpdate', spieler);
                 }
             }
-
-            // Automatisches Aktualisieren alle 5 Sekunden
-            setInterval(async () => {
-                const response = await fetch('/verlauf');
-                const data = await response.json();
-                verlauf = data;
-                updateVerlaufListe();
-            }, 5000);
         </script>
     </body>
     </html>
@@ -243,18 +255,8 @@ app.post('/wort_einloggen', async (req, res) => {
     for (const entry of spieler) {
       await pool.query('INSERT INTO worte (spielername, wort) VALUES ($1, $2)', [entry.name, entry.wort]);
     }
+    io.emit('update', { spieler, verlauf: spieler });
     res.json({ status: 'success' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: 'error', message: err.message });
-  }
-});
-
-// API-Endpunkt: Verlauf abrufen
-app.get('/verlauf', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT spielername, wort FROM worte');
-    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: 'error', message: err.message });
@@ -265,6 +267,7 @@ app.get('/verlauf', async (req, res) => {
 app.post('/zuruecksetzen', async (req, res) => {
   try {
     await pool.query('DELETE FROM worte');
+    io.emit('update', { spieler: [], verlauf: [] });
     res.json({ status: 'reset' });
   } catch (err) {
     console.error(err);
@@ -272,7 +275,20 @@ app.post('/zuruecksetzen', async (req, res) => {
   }
 });
 
+// WebSocket-Kommunikation
+io.on('connection', (socket) => {
+  console.log('Ein Spieler ist verbunden');
+  
+  socket.on('spielerUpdate', (spieler) => {
+    io.emit('update', { spieler, verlauf });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Ein Spieler hat die Verbindung getrennt');
+  });
+});
+
 // Server starten
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server läuft auf Port ${port}`);
 });
