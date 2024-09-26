@@ -81,9 +81,11 @@ io.on('connection', (socket) => {
     if (!spieler.includes(name)) {
       spieler.push(name);
 
+      // Spieler sofort anzeigen, auch wenn keine weiteren Spieler da sind
+      io.emit('update', { spieler, verlauf });
+
       // Spieler in die Datenbank einfügen
       await pool.query('INSERT INTO worte (spielername, wort) VALUES ($1, $2)', [name, '']);
-      io.emit('update', { spieler, verlauf });
     }
   });
 
@@ -110,6 +112,9 @@ io.on('connection', (socket) => {
 
       io.emit('vergleichErgebnis', { ergebnis, verlauf }); // Ergebnis an alle senden
       wortEingaben = {}; // Zurücksetzen für die nächste Runde
+    } else {
+      // Wenn noch nicht alle Spieler eingeloggt haben
+      io.emit('warteAufSpieler', { message: "Warte auf andere Spieler, bis sie eingeloggt haben." });
     }
   });
 
