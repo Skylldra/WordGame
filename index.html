@@ -70,6 +70,8 @@
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             z-index: 1000;
+            color: black; /* Ändere die Schriftfarbe auf Schwarz */
+            cursor: pointer;
         }
         .crown-icon {
             font-size: 2rem;
@@ -101,7 +103,7 @@
         <ul id="verlaufListe"></ul>
     </div>
 
-    <div id="gewonnenPopup" class="popup" style="display:none;">
+    <div id="gewonnenPopup" class="popup" style="display:none;" onclick="schließePopup()">
         <span class="crown-icon">👑</span>
         <h2>Gewonnen!</h2>
     </div>
@@ -198,6 +200,11 @@
         socket.on('gewonnen', () => {
             document.getElementById("gewonnenPopup").style.display = 'block';
         });
+
+        // Popup schließen
+        function schließePopup() {
+            document.getElementById("gewonnenPopup").style.display = 'none';
+        }
     </script>
 </body>
 </html>
