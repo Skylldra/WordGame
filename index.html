@@ -11,9 +11,10 @@
             color: white;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             height: 100vh;
             margin: 0;
+            padding-top: 20px;
         }
         h1, h2 {
             text-align: center;
@@ -27,8 +28,18 @@
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
             color: #333;
             width: 100%;
-            max-width: 400px;
-            text-align: center;
+            max-width: 600px;
+        }
+        .bereich {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .bereich h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
         }
         input[type="text"] {
             width: calc(100% - 20px);
@@ -70,7 +81,7 @@
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             z-index: 1000;
-            color: black; /* Schwarze Schriftfarbe */
+            color: black;
             cursor: pointer;
         }
         .crown-icon {
@@ -81,26 +92,32 @@
 </head>
 <body>
     <div id="spielbereich">
-        <h1>Wortvergleich-Spiel</h1>
-        
-        <h2>Spieler hinzufügen</h2>
-        <input type="text" id="spielerName" placeholder="Spielername eingeben">
-        <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
+        <!-- Spieler hinzufügen Bereich -->
+        <div class="bereich" id="spielerBereich">
+            <h2>Spieler hinzufügen</h2>
+            <input type="text" id="spielerName" placeholder="Spielername eingeben">
+            <button onclick="spielerHinzufügen()">Spieler hinzufügen</button>
+            <h2>Aktive Spieler</h2>
+            <ul id="spielerListe"></ul>
+        </div>
 
-        <h2>Aktive Spieler</h2>
-        <ul id="spielerListe"></ul>
+        <!-- Worteingabe Bereich -->
+        <div class="bereich" id="wortBereich">
+            <h2>Worteingabe</h2>
+            <div id="wortEingabeBereich"></div>
+            <button id="wortEinloggenBtn" onclick="worteEinloggen()">Worte einloggen</button>
+        </div>
 
-        <h2>Worteingabe</h2>
-        <div id="wortEingabeBereich"></div>
-        <button id="wortEinloggenBtn" onclick="worteEinloggen()">Worte einloggen</button>
+        <!-- Ergebnis und Verlauf Bereich -->
+        <div class="bereich" id="ergebnisBereich">
+            <h2>Ergebnis</h2>
+            <p id="ergebnis"></p>
+            <h2>Verlauf</h2>
+            <ul id="verlaufListe"></ul>
+        </div>
 
-        <h2>Ergebnis</h2>
-        <p id="ergebnis"></p>
-
+        <!-- Spiel zurücksetzen Button -->
         <button onclick="spielZuruecksetzen()">Spiel zurücksetzen</button>
-
-        <h2>Verlauf</h2>
-        <ul id="verlaufListe"></ul>
     </div>
 
     <div id="gewonnenPopup" class="popup" style="display:none;" onclick="schließePopup()">
