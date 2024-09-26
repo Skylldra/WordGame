@@ -70,7 +70,7 @@
         ul {
             list-style-type: none;
             padding: 0;
-            text-align: center; /* Zentriere die Liste */
+            text-align: center;
         }
         li {
             font-size: 1.2rem;
@@ -200,13 +200,13 @@
             });
         }
 
-        // Verlauf aktualisieren
+        // Verlauf aktualisieren (neueste Runde oben)
         function updateVerlaufListe(verlauf) {
             const verlaufListe = document.getElementById("verlaufListe");
             verlaufListe.innerHTML = '';
-            verlauf.forEach((runde, index) => {
+            verlauf.slice().reverse().forEach((runde, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = `<strong>Runde ${index + 1}</strong>:<br>` + 
+                li.innerHTML = `<strong>Runde ${verlauf.length - index}</strong>:<br>` + 
                     Object.entries(runde)
                     .map(([spieler, wort]) => `<span>${spieler}: ${wort}</span>`)
                     .join('<br>');
