@@ -70,7 +70,7 @@
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             z-index: 1000;
-            color: black; /* Ändere die Schriftfarbe auf Schwarz */
+            color: black; /* Schwarze Schriftfarbe */
             cursor: pointer;
         }
         .crown-icon {
@@ -183,7 +183,10 @@
             verlaufListe.innerHTML = '';
             verlauf.forEach((runde, index) => {
                 const li = document.createElement("li");
-                li.textContent = `Runde ${index + 1}: ${Object.values(runde).join(', ')}`;
+                const spielerWörter = Object.entries(runde)
+                    .map(([spieler, wort]) => `${spieler}: ${wort}`)
+                    .join(', ');
+                li.textContent = `Runde ${index + 1}: ${spielerWörter}`;
                 verlaufListe.appendChild(li);
             });
         }
@@ -205,6 +208,11 @@
         function schließePopup() {
             document.getElementById("gewonnenPopup").style.display = 'none';
         }
+
+        // Warten auf andere Spieler Nachricht anzeigen
+        socket.on('warteAufSpieler', (data) => {
+            document.getElementById("ergebnis").textContent = data.message;
+        });
     </script>
 </body>
 </html>
